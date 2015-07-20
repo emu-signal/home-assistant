@@ -22,3 +22,6 @@
 [submodule "homeassistant/components/frontend/www_static/home-assistant-polymer"]
 	path = homeassistant/components/frontend/www_static/home-assistant-polymer
 	url = https://github.com/balloob/home-assistant-polymer.git
+[submodule "homeassistant/external/unifi"]
+	path = homeassistant/external/unifi
+	url = https://github.com/emu-signal/unifi-api
