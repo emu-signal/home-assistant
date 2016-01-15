@@ -1,34 +1,10 @@
 """
 homeassistant.components.notify.syslog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Syslog notification service.
 
-Configuration:
-
-To use the Syslog notifier you will need to add something like the following
-to your config/configuration.yaml
-
-notify:
-  platform: syslog
-  facility: SYSLOG_FACILITY
-  option: SYSLOG_LOG_OPTION
-  priority: SYSLOG_PRIORITY
-
-Variables:
-
-facility
-*Optional
-Facility according to RFC 3164 (http://tools.ietf.org/html/rfc3164). Default
-is 'syslog' if no value is given.
-
-option
-*Option
-Log option. Default is 'pid' if no value is given.
-
-priority
-*Optional
-Priority of the messages. Default is 'info' if no value is given.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.syslog/
 """
 import logging
 import syslog
@@ -76,16 +52,14 @@ PRIORITIES = {5: syslog.LOG_EMERG,
 def get_service(hass, config):
     """ Get the mail notification service. """
 
-    if not validate_config(config,
-                           {DOMAIN: ['facility',
-                                     'option',
-                                     'priority']},
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: ['facility', 'option', 'priority']},
                            _LOGGER):
         return None
 
-    _facility = FACILITIES.get(config[DOMAIN]['facility'], 40)
-    _option = OPTIONS.get(config[DOMAIN]['option'], 10)
-    _priority = PRIORITIES.get(config[DOMAIN]['priority'], -1)
+    _facility = FACILITIES.get(config['facility'], 40)
+    _option = OPTIONS.get(config['option'], 10)
+    _priority = PRIORITIES.get(config['priority'], -1)
 
     return SyslogNotificationService(_facility, _option, _priority)
 

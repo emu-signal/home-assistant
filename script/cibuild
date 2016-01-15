@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# script/cibuild: Setup environment for CI to run tests. This is primarily
+#                 designed to run on the continuous integration server.
+
+cd "$(dirname "$0")/.."
+
+if [ "$TRAVIS_PYTHON_VERSION" != "3.4" ]; then
+  NO_LINT=1
+fi
+
+export NO_LINT
+
+script/test coverage
+
+STATUS=$?
+
+coveralls
+
+exit $STATUS

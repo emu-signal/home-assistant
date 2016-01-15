@@ -1,16 +1,24 @@
-""" Support for Hue lights. """
-import logging
+"""
+homeassistant.components.light.wink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Wink lights.
 
-# pylint: disable=no-name-in-module, import-error
-import homeassistant.external.wink.pywink as pywink
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.wink/
+"""
+import logging
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
+REQUIREMENTS = ['python-wink==0.3.1']
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Wink lights. """
+    import pywink
+
     token = config.get(CONF_ACCESS_TOKEN)
 
     if not pywink.is_token_set() and token is None:
@@ -27,7 +35,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WinkLight(WinkToggleDevice):
-    """ Represents a Wink light """
+    """ Represents a Wink light. """
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
@@ -35,10 +43,10 @@ class WinkLight(WinkToggleDevice):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is not None:
-            self.wink.setState(True, brightness / 255)
+            self.wink.set_state(True, brightness=brightness / 255)
 
         else:
-            self.wink.setState(True)
+            self.wink.set_state(True)
 
     @property
     def state_attributes(self):

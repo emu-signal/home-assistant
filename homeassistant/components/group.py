@@ -1,27 +1,30 @@
 """
 homeassistant.components.group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to group devices that can be turned on or off.
-"""
 
-import homeassistant as ha
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/group/
+"""
+import homeassistant.core as ha
 from homeassistant.helpers import generate_entity_id
+from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity
 import homeassistant.util as util
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN)
+    STATE_HOME, STATE_NOT_HOME, STATE_OPEN, STATE_CLOSED,
+    STATE_UNKNOWN)
 
 DOMAIN = "group"
-DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 ATTR_AUTO = "auto"
 
 # List of ON/OFF state tuples for groupable states
-_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME)]
+_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
+                (STATE_OPEN, STATE_CLOSED)]
 
 
 def _get_group_on_off(state):
@@ -102,10 +105,8 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
     for name, entity_ids in config.get(DOMAIN, {}).items():
-        # Support old deprecated method - 2/28/2015
         if isinstance(entity_ids, str):
-            entity_ids = entity_ids.split(",")
-
+            entity_ids = [ent.strip() for ent in entity_ids.split(",")]
         setup_group(hass, name, entity_ids)
 
     return True
@@ -162,8 +163,8 @@ class Group(Entity):
 
     def start(self):
         """ Starts the tracking. """
-        self.hass.states.track_change(
-            self.tracking, self._state_changed_listener)
+        track_state_change(
+            self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
         """ Unregisters the group from Home Assistant. """

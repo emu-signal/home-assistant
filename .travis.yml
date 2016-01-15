@@ -1,13 +1,17 @@
 sudo: false
 language: python
+cache:
+  directories:
+    - $HOME/.cache/pip
+    # - "$HOME/virtualenv/python$TRAVIS_PYTHON_VERSION"
 python:
-  - "3.4"
+  - 3.4
+  - 3.5
 install:
-  - pip install -r requirements.txt
-  - pip install flake8 pylint coveralls
+  # Validate requirements_all.txt on Python 3.5
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then python3 setup.py develop; script/gen_requirements_all.py validate; fi
+  - script/bootstrap_server
 script:
-  - flake8 homeassistant --exclude bower_components,external
-  - pylint homeassistant
-  - coverage run -m unittest discover tests
-after_success:
-  - coveralls
+  - script/cibuild
+matrix:
+  fast_finish: true

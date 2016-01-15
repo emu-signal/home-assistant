@@ -1,39 +1,11 @@
 """
 homeassistant.components.media_player.kodi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides an interface to the XBMC/Kodi JSON-RPC API
 
-Configuration:
-
-To use Kodi add something like this to your configuration:
-
-media_player:
-  platform: kodi
-  name: Kodi
-  url: http://192.168.0.123/jsonrpc
-  user: kodi
-  password: my_secure_password
-
-Variables:
-
-name
-*Optional
-The name of the device
-
-url
-*Required
-The URL of the XBMC/Kodi JSON-RPC API. Example: http://192.168.0.123/jsonrpc
-
-user
-*Optional
-The XBMC/Kodi HTTP username
-
-password
-*Optional
-The XBMC/Kodi HTTP password
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.kodi/
 """
-
 import urllib
 import logging
 
@@ -43,13 +15,8 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
-try:
-    import jsonrpc_requests
-except ImportError:
-    jsonrpc_requests = None
-
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests>=0.1']
+REQUIREMENTS = ['jsonrpc-requests==0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
@@ -58,11 +25,6 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
-
-    global jsonrpc_requests    # pylint: disable=invalid-name
-    if jsonrpc_requests is None:
-        import jsonrpc_requests as jsonrpc_requests_
-        jsonrpc_requests = jsonrpc_requests_
 
     add_devices([
         KodiDevice(
@@ -75,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def _get_image_url(kodi_url):
-    """ Helper function that parses the thumbnail URLs used by Kodi """
+    """ Helper function that parses the thumbnail URLs used by Kodi. """
     url_components = urllib.parse.urlparse(kodi_url)
 
     if url_components.scheme == 'image':
@@ -88,6 +50,7 @@ class KodiDevice(MediaPlayerDevice):
     # pylint: disable=too-many-public-methods
 
     def __init__(self, name, url, auth=None):
+        import jsonrpc_requests
         self._name = name
         self._url = url
         self._server = jsonrpc_requests.Server(url, auth=auth)
@@ -105,9 +68,11 @@ class KodiDevice(MediaPlayerDevice):
 
     def _get_players(self):
         """ Returns the active player objects or None """
+        import jsonrpc_requests
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
+            _LOGGER.exception('Unable to fetch kodi data')
             return None
 
     @property
@@ -167,7 +132,7 @@ class KodiDevice(MediaPlayerDevice):
     def media_content_id(self):
         """ Content ID of current playing media. """
         if self._item is not None:
-            return self._item['uniqueid']
+            return self._item.get('uniqueid', None)
 
     @property
     def media_content_type(self):
@@ -236,7 +201,7 @@ class KodiDevice(MediaPlayerDevice):
         self.update_ha_state()
 
     def _set_play_state(self, state):
-        """ Helper method for play/pause/toggle """
+        """ Helper method for play/pause/toggle. """
         players = self._get_players()
 
         if len(players) != 0:
@@ -257,7 +222,7 @@ class KodiDevice(MediaPlayerDevice):
         self._set_play_state(False)
 
     def _goto(self, direction):
-        """ Helper method used for previous/next track """
+        """ Helper method used for previous/next track. """
         players = self._get_players()
 
         if len(players) != 0:
